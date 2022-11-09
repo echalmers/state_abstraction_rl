@@ -32,11 +32,11 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
         for t in range(MAX_TRY):
 
             # display perceived values
-                q_ax.cla()
-                value_map = Q.max(axis=2).transpose()
-                q_ax.imshow(value_map)
-                plt.title('perceived state values (max Q values)')
-                plt.pause(0.0001)
+            q_ax.cla()
+            value_map = Q.max(axis=2).transpose()
+            q_ax.imshow(value_map)
+            plt.title('perceived state values (max Q values)')
+            plt.pause(0.0001)
 
             # select action
             if random.uniform(0, 1) < epsilon:
