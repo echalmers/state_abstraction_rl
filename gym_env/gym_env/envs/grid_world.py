@@ -15,11 +15,11 @@ LEFT = 2
 DOWN = 3
 
 class GridWorldEnv(gym.Env):
-    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 24}
+    metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 100000}
 
     def __init__(self, render_mode=None):
-        self.size_x = 48
-        self.size_y = 17
+        self.size_x = 10#  48
+        self.size_y = 10#  17
         self.block_size = 20
         self.window_width = self.size_x * self.block_size
         self.window_height = self.size_y * self.block_size
