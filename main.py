@@ -32,7 +32,6 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
         for t in range(MAX_TRY):
 
             # display perceived values
-            if t == 0 or t % 1 == 0:
                 q_ax.cla()
                 value_map = Q.max(axis=2).transpose()
                 q_ax.imshow(value_map)
