@@ -12,7 +12,7 @@ MAX_EPISODES = 25
 MAX_TRY = 5000
 
 # figure window for perceived values
-q_fig, q_ax = plt.subplots()
+q_fig, q_ax = plt.subplots(1, 2)
 plt.ion()
 
 
@@ -23,6 +23,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
     R = np.full(Ss + (As,), fill_value=0, dtype=float)
     T = np.full((Ss[0], Ss[1], Ss[0], Ss[1], As), fill_value=0, dtype=int)
     C = np.full(Ss + (As,), fill_value=0, dtype=int)
+    heatmap = np.full((Ss[1], Ss[0]), fill_value=0, dtype=int)
 
     for episode in range(MAX_EPISODES):
         total_episode_reward = 0
@@ -32,10 +33,12 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
         for t in range(MAX_TRY):
 
             # display perceived values
-            q_ax.cla()
+            q_ax[0].cla()
             value_map = Q.max(axis=2).transpose()
-            q_ax.imshow(value_map)
-            plt.title('perceived state values (max Q values)')
+            q_ax[0].set_title('perceived state values (max Q values)')
+            q_ax[1].set_title('agent heat map')
+            q_ax[0].imshow(value_map)
+            q_ax[1].imshow(heatmap, cmap='hot', interpolation='nearest')
             plt.pause(0.0001)
 
             # select action
@@ -46,6 +49,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 
             # execute action
             next_state, reward, terminated, truncated, info = env.step(action)
+            heatmap[next_state[1], next_state[0]] += 1
             total_episode_reward += reward
 
             # update T, C, and R tables
