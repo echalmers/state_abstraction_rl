@@ -30,6 +30,10 @@ class StateActionTable:
         """
         return {action: self[state, action] for action in actions}
 
+    def get_best_action(self, state, actions):
+        action_values = self.get_action_values(state=state, actions=actions)
+        return max(action_values, key=action_values.get)
+
 
 class TTable:
     """
@@ -71,20 +75,20 @@ class TTable:
         """
         return list(itertools.chain(*[x.keys() for x in self.backward_map[state].values()]))
 
+if __name__ == '__main__':
+    # use StateActionTable class for Q, R, C tables
+    R = StateActionTable(default_value=10)
+    R['s1', 'a1'] = 5.2
+    R['s1', 'a2'] += 2
+    print('R entry for s1, a1: ', R['s1', 'a1'])
+    print('R entry for s2, a2: ', R['s1', 'a2'])
+    print('R entries for s1, actions a1-a3: ', R.get_action_values(state='s1', actions=['a1', 'a2', 'a3']))
+    print('Best action choice (max):', R.get_best_action(state='s1', actions=['a1', 'a2', 'a3']))
 
-# use StateActionTable class for Q, R, C tables
-R = StateActionTable(default_value=10)
-R['s1', 'a1'] = 5.2
-R['s1', 'a2'] += 2
-print('R entry for s1, a1: ', R['s1', 'a1'])
-print('R entry for s2, a2: ', R['s1', 'a2'])
-print('R entries for s1, actions a1-a3: ', R.get_action_values(state='s1', actions=['a1', 'a2', 'a3']))
-print(max(R.get_action_values(state='s1', actions=['a1', 'a2', 'a3']), key=R.get_action_values(state='s1', actions=['a1', 'a2', 'a3']).get))
-
-# use TTable class for the T table
-T = TTable()
-T['s1', 'a1', 's2'] += 1
-T['s1', 'a2', 's3'] += 1
-T['s1', 'a1', 's4'] += 1
-print('states accessible from s1: ', T.get_states_accessible_from('s1'))
-print('states with access to s3: ', T.get_states_with_access_to('s3'))
+    # use TTable class for the T table
+    T = TTable()
+    T['s1', 'a1', 's2'] += 1
+    T['s1', 'a2', 's3'] += 1
+    T['s1', 'a1', 's4'] += 1
+    print('states accessible from s1: ', T.get_states_accessible_from('s1'))
+    print('states with access to s3: ', T.get_states_with_access_to('s3'))
