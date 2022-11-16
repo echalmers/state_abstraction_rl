@@ -1,5 +1,5 @@
 import itertools
-
+import numpy as np
 
 class StateActionTable:
     """
@@ -34,6 +34,12 @@ class StateActionTable:
         action_values = self.get_action_values(state=state, actions=actions)
         return max(action_values, key=action_values.get)
 
+    def convert_to_np_arr(self, size, fill_value, dtype):
+        arr = np.full(size, fill_value=fill_value, dtype=dtype)
+        for (x, y) in list(self.table.keys()):
+            for act, act_value in enumerate(list(self.get_action_values((x, y), [0, 1, 2, 3]).values())):
+                arr[x, y, act] = act_value
+        return arr
 
 class TTable:
     """
