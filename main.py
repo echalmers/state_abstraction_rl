@@ -51,35 +51,39 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
             # naive implementation - super inefficient and slow
             # updates every entry of the Q table after every action
             # (a literal implementation of fig 12.6 from https://artint.info/2e/html/ArtInt2e.Ch12.S8.html)
-            for (x1, y1) in T.get_states_accessible_from(tuple(curr_state)):
+            for (x1, y1) in C.get_all_states():
                 for act in range(4):
                     if C[(x1, y1), act] == 0:
                         continue
 
                     Q[(x1, y1), act] = R[(x1, y1), act]
 
-                    for (x2, y2) in T.get_states_accessible_from(tuple(curr_state)):
+                    for (x2, y2) in T.get_states_accessible_from((x1, y1)):
                         Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
-                                Q.get_best_action(state=(x2, y2), actions=[0, 1, 2, 3])
+                                max(Q.get_action_values(state=(x2, y2), actions=[0, 1, 2, 3]).values())
 
             curr_state = next_state
 
             if terminated or t >= MAX_TRY:
                 break
 
+            # display perceived values
+            q_ax[0].cla()
+            q_ax[1].cla()
+            value_map = (Q.convert_to_np_arr(Ss + (As,), 100)).max(axis=2).transpose()
+            q_ax[0].set_title('perceived state values (max Q values)')
+            q_ax[1].set_title('agent heat map')
+            q_ax[0].imshow(value_map)
+            q_ax[1].imshow(heatmap, cmap='hot')
+            plt.pause(0.00001)
+
         print(
             f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}"
         )
 
-        # display perceived values
-        q_ax[0].cla()
-        value_map = (Q.convert_to_np_arr(Ss + (As,), 100, int)).max(axis=2).transpose()
-        q_ax[0].set_title('perceived state values (max Q values)')
-        q_ax[1].set_title('agent heat map')
-        q_ax[0].imshow(value_map)
-        q_ax[1].imshow(heatmap, cmap='hot', interpolation='nearest')
-        plt.pause(0.0001)
 
+
+    plt.pause(10)
     env.close()
 
 
