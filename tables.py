@@ -34,12 +34,16 @@ class StateActionTable:
         action_values = self.get_action_values(state=state, actions=actions)
         return max(action_values, key=action_values.get)
 
-    def convert_to_np_arr(self, size, fill_value, dtype):
-        arr = np.full(size, fill_value=fill_value, dtype=dtype)
+    def convert_to_np_arr(self, size, fill_value):
+        arr = np.full(size, fill_value=fill_value)
         for (x, y) in list(self.table.keys()):
             for act, act_value in enumerate(list(self.get_action_values((x, y), [0, 1, 2, 3]).values())):
                 arr[x, y, act] = act_value
         return arr
+
+    def get_all_states(self):
+        return self.table.keys()
+
 
 class TTable:
     """
@@ -71,7 +75,7 @@ class TTable:
         :param state: state to infer successor states for
         :return: list of states
         """
-        return list(itertools.chain(*[x.keys() for x in self.forward_map[state].values()]))
+        return set(itertools.chain(*[x.keys() for x in self.forward_map[state].values()]))
 
     def get_states_with_access_to(self, state):
         """
@@ -79,7 +83,7 @@ class TTable:
         :param state: state to infer predecessor states for
         :return: list of states
         """
-        return list(itertools.chain(*[x.keys() for x in self.backward_map[state].values()]))
+        return set(itertools.chain(*[x.keys() for x in self.backward_map[state].values()]))
 
 if __name__ == '__main__':
     # use StateActionTable class for Q, R, C tables
