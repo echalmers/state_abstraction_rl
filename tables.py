@@ -93,9 +93,20 @@ class TTable:
         """
         returns states that have access to the specified state (inferred from table entries)
         :param state: state to infer predecessor states for
-        :return: list of states
+        :return: set of states
         """
         return set(itertools.chain(*[x.keys() for x in self.backward_map[state].values()]))
+
+    def get_state_actions_with_access_to(self, state):
+        """
+        returns state-action tuples that have given access to the specified state (inferred from table entries)
+        :param state: state to infer predecessor states for
+        :return: generator of state-action tuples
+        """
+        return itertools.chain(
+            *[itertools.product(s1, (act, )) for act, s1 in self.backward_map[state].items()]
+        )
+
 
 if __name__ == '__main__':
     # use StateActionTable class for Q, R, C tables
@@ -112,5 +123,7 @@ if __name__ == '__main__':
     T['s1', 'a1', 's2'] += 1
     T['s1', 'a2', 's3'] += 1
     T['s1', 'a1', 's4'] += 1
+    T['s3', 'a1', 's2'] += 1
+    T['s4', 'a3', 's2'] += 1
     print('states accessible from s1: ', T.get_states_accessible_from('s1'))
-    print('states with access to s3: ', T.get_states_with_access_to('s3'))
+    print('state-actions with access to s3: ', [x for x in T.get_states_with_access_to('s2')])
