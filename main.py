@@ -3,6 +3,7 @@ import gym_env
 import numpy as np
 import random
 import tables
+import pqueue
 from matplotlib import pyplot as plt
 
 
@@ -15,53 +16,78 @@ plt.ion()
 
 
 def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
-
-    # Create and initialize arrays
+    # Initialize Q(s, a), M odel(s, a), for all s, a, and P Queue to empty
     Q = tables.StateActionTable(default_value=100)
     R = tables.StateActionTable(default_value=0)
     C = tables.StateActionTable(default_value=0)
     T = tables.TTable()
+    PQueue = pqueue.StateActionPQueue()
 
     heatmap = np.full((Ss[1], Ss[0]), fill_value=0, dtype=int)
 
     for episode in range(MAX_EPISODES):
         total_episode_reward = 0
-
+        
+        # S <- current (nonterminal) state
         curr_state, _ = env.reset()
 
         for t in range(MAX_TRY):
 
             # select action
+            # A <- policy(S, Q)
             if random.uniform(0, 1) < epsilon:
                 action = env.action_space.sample()
             else:
                 action = Q.get_best_action(state=tuple(curr_state), actions=[0, 1, 2, 3])
 
             # execute action
+            # Take action A; observe resultant reward, R, and state, S 0
             next_state, reward, terminated, truncated, info = env.step(action)
             heatmap[next_state[1], next_state[0]] += 1
             total_episode_reward += reward
 
             # update T, C, and R tables
+            # Model(S, A) <- R, S'
             T[tuple(curr_state), action, tuple(next_state)] += 1
             C[tuple(curr_state), action] += 1
             R[tuple(curr_state), action] += (reward - R[tuple(curr_state), action]) / C[tuple(curr_state), action]
 
-            # update Q tables
-            # naive implementation - super inefficient and slow
-            # updates every entry of the Q table after every action
-            # (a literal implementation of fig 12.6 from https://artint.info/2e/html/ArtInt2e.Ch12.S8.html)
-            for (x1, y1) in C.get_all_states():
-                for act in range(4):
-                    if C[(x1, y1), act] == 0:
-                        continue
+            # P <- abs(R + discount_factor * max(Q(S', a)) - Q(S,A))
+            priority = abs(reward + discount_factor * max(Q.get_action_values(state=tuple(next_state), actions=[0, 1, 2, 3]).values()) - Q[tuple(curr_state), action])
 
-                    Q[(x1, y1), act] = R[(x1, y1), act]
+            # if P > theta (assume 0?) then insert S, A into P Queue with priority P
+            if priority > 0:
+                PQueue.insert(curr_state, action, priority)
 
-                    for (x2, y2) in T.get_states_accessible_from((x1, y1)):
-                        Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
+            # Loop repeat n times, while PQueue is not empty:
+            while not PQueue.is_empty():
+                #(S, A) <- first(P Queue)
+                (x1, y1), act, _ = PQueue.pop()
+
+                # (R, S') <- Model(S, A)
+                # ???
+
+                # Q(S, A) <- Q(S, A) + ...
+                Q[(x1, y1), act] = R[(x1, y1), act]
+
+                # Loop for all (S_hat, A_hat) predicted to lead to S:
+                for (x2, y2) in T.get_states_accessible_from((x1, y1)):
+                    # predicted reward for  ̄S_hat, A_hat, S
+
+                    Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
                                 max(Q.get_action_values(state=(x2, y2), actions=[0, 1, 2, 3]).values())
 
+                for (xbar, ybar), act_from_sbar_to_s in T.get_state_actions_with_access_to((x1, y1)):
+                    predicted_reward = R[(xbar, ybar), act_from_sbar_to_s]
+
+                	# P <- abs(R + discount_factor * max(Q(S, a)) - Q(S_hat,A_hat))
+                    priority = abs(predicted_reward + discount_factor * max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - \
+                        Q[(x2, y2), act_from_sbar_to_s])
+
+                    # if P > theta (assume 0?) then insert S_hat, A_hat into PQueue with priority P
+                    if priority > 0:
+                        PQueue.insert((xbar, ybar), act, priority)
+                    
             curr_state = next_state
 
             if terminated or t >= MAX_TRY:
