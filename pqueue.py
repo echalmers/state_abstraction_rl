@@ -18,12 +18,16 @@ class StateActionPQueue:
     def __str__(self):
         return ' '.join([str(i) for i in self.queue])
 
+    def __check_state_action_exists(self, state, action):
+        return [x for x in self.queue if x[0] == state and x[1] == action]
+
     def is_empty(self):
         return len(self.queue) == 0
 
     # inserts a (state, action, priority) triple 
     def insert(self, state, action, priority):
-        self.queue.append((state, action, priority))
+        if not self.__check_state_action_exists(state=state, action=action):
+            self.queue.append((state, action, priority))
 
     # finds the value with the max priority and removes it from the queue
     def pop(self):
