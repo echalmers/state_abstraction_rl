@@ -82,11 +82,11 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 
                 	# P <- abs(R + discount_factor * max(Q(S, a)) - Q(S_hat,A_hat))
                     priority = abs(predicted_reward + discount_factor * max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - \
-                        Q[(x2, y2), act_from_sbar_to_s])
+                        Q[(xbar, ybar), act_from_sbar_to_s])
 
                     # if P > theta (assume 0?) then insert S_hat, A_hat into PQueue with priority P
                     if priority > 0:
-                        PQueue.insert((xbar, ybar), act, priority)
+                        PQueue.insert((xbar, ybar), act_from_sbar_to_s, priority)
                     
             curr_state = next_state
 
