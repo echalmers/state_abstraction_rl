@@ -103,9 +103,12 @@ class TTable:
         :param state: state to infer predecessor states for
         :return: generator of state-action tuples
         """
-        return itertools.chain(
-            *[itertools.product(s1, (act, )) for act, s1 in self.backward_map[state].items()]
-        )
+        try:
+            return itertools.chain(
+                *[itertools.product(s1, (act, )) for act, s1 in self.backward_map[state].items()]
+            )
+        except KeyError:
+            return []
 
 
 if __name__ == '__main__':
