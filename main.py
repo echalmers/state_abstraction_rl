@@ -22,6 +22,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
     C = tables.StateActionTable(default_value=0)
     T = tables.TTable()
     PQueue = pqueue.StateActionPQueue()
+    q_updates_count = 0
 
     heatmap = np.full((Ss[1], Ss[0]), fill_value=0, dtype=int)
 
@@ -76,6 +77,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 
                     Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
                                 max(Q.get_action_values(state=(x2, y2), actions=[0, 1, 2, 3]).values())
+                    q_updates_count += 1
 
                 for (xbar, ybar), act_from_sbar_to_s in T.get_state_actions_with_access_to((x1, y1)):
                     predicted_reward = R[(xbar, ybar), act_from_sbar_to_s]
@@ -104,7 +106,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
             plt.pause(0.00001)
 
         print(
-            f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}"
+            f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {q_updates_count}"
         )
 
 
