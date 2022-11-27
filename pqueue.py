@@ -19,7 +19,10 @@ class StateActionPQueue:
         return ' '.join([str(i) for i in self.queue])
 
     def __check_state_action_exists(self, state, action):
-        return [x for x in self.queue if x[0] == state and x[1] == action]
+        for s, a, _ in self.queue:
+            if s == state and a == action:
+                return True
+        return False
 
     def is_empty(self):
         return len(self.queue) == 0
