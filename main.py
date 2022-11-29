@@ -16,7 +16,8 @@ plt.ion()
 
 
 def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
-    # Initialize Q(s, a), M odel(s, a), for all s, a, and P Queue to empty
+
+    # Create and initialize StateActionTables, TTable, and PQueue.
     Q = tables.StateActionTable(default_value=100)
     R = tables.StateActionTable(default_value=0)
     C = tables.StateActionTable(default_value=0)
@@ -29,51 +30,40 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
     for episode in range(MAX_EPISODES):
         total_episode_reward = 0
         
-        # S <- current (nonterminal) state
         curr_state, _ = env.reset()
 
         for t in range(MAX_TRY):
 
             # select action
-            # A <- policy(S, Q)
             if random.uniform(0, 1) < epsilon:
                 action = env.action_space.sample()
             else:
                 action = Q.get_best_action(state=tuple(curr_state), actions=[0, 1, 2, 3])
 
             # execute action
-            # Take action A; observe resultant reward, R, and state, S 0
             next_state, reward, terminated, truncated, info = env.step(action)
             heatmap[next_state[1], next_state[0]] += 1
             total_episode_reward += reward
 
             # update T, C, and R tables
-            # Model(S, A) <- R, S'
             T[tuple(curr_state), action, tuple(next_state)] += 1
             C[tuple(curr_state), action] += 1
             R[tuple(curr_state), action] += (reward - R[tuple(curr_state), action]) / C[tuple(curr_state), action]
 
-            # P <- abs(R + discount_factor * max(Q(S', a)) - Q(S,A))
-            priority = abs(reward + discount_factor * max(Q.get_action_values(state=tuple(next_state), actions=[0, 1, 2, 3]).values()) - Q[tuple(curr_state), action])
+            # Set priority for current state
+            priority = abs(reward + discount_factor * \
+                max(Q.get_action_values(state=tuple(next_state), actions=[0, 1, 2, 3]).values()) - Q[tuple(curr_state), action])
 
-            # if P > theta (assume 0?) then insert S, A into P Queue with priority P
             if priority > 0:
                 PQueue.insert(curr_state, action, priority)
 
-            # Loop repeat n times, while PQueue is not empty:
             while not PQueue.is_empty():
-                #(S, A) <- first(P Queue)
                 (x1, y1), act, _ = PQueue.pop()
 
-                # (R, S') <- Model(S, A)
-                # ???
-
-                # Q(S, A) <- Q(S, A) + ...
                 Q[(x1, y1), act] = R[(x1, y1), act]
 
-                # Loop for all (S_hat, A_hat) predicted to lead to S:
+                # Loop for all (state, action) pairs predicted to lead to S:
                 for (x2, y2) in T.get_states_accessible_from((x1, y1)):
-                    # predicted reward for  ̄S_hat, A_hat, S
 
                     Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
                                 max(Q.get_action_values(state=(x2, y2), actions=[0, 1, 2, 3]).values())
@@ -82,11 +72,10 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
                 for (xbar, ybar), act_from_sbar_to_s in T.get_state_actions_with_access_to((x1, y1)):
                     predicted_reward = R[(xbar, ybar), act_from_sbar_to_s]
 
-                	# P <- abs(R + discount_factor * max(Q(S, a)) - Q(S_hat,A_hat))
-                    priority = abs(predicted_reward + discount_factor * max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - \
-                        Q[(xbar, ybar), act_from_sbar_to_s])
+                    # Set priority for (sbar, act) pair
+                    priority = abs(predicted_reward + discount_factor * \
+                        max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - Q[(xbar, ybar), act_from_sbar_to_s])
 
-                    # if P > theta (assume 0?) then insert S_hat, A_hat into PQueue with priority P
                     if priority > 0:
                         PQueue.insert((xbar, ybar), act_from_sbar_to_s, priority)
                     
@@ -108,8 +97,6 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
         print(
             f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {q_updates_count}"
         )
-
-
 
     plt.pause(10)
     env.close()
