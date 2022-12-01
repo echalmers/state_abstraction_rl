@@ -3,7 +3,6 @@ import gym_env
 import numpy as np
 import random
 import tables
-import pqueue
 from matplotlib import pyplot as plt
 
 
@@ -17,19 +16,18 @@ plt.ion()
 
 def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 
-    # Create and initialize StateActionTables, TTable, and PQueue.
+    # Create and initialize arrays
     Q = tables.StateActionTable(default_value=100)
     R = tables.StateActionTable(default_value=0)
     C = tables.StateActionTable(default_value=0)
     T = tables.TTable()
-    PQueue = pqueue.StateActionPQueue()
     q_updates_count = 0
 
     heatmap = np.full((Ss[1], Ss[0]), fill_value=0, dtype=int)
 
     for episode in range(MAX_EPISODES):
         total_episode_reward = 0
-        
+
         curr_state, _ = env.reset()
 
         for t in range(MAX_TRY):
@@ -50,35 +48,22 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
             C[tuple(curr_state), action] += 1
             R[tuple(curr_state), action] += (reward - R[tuple(curr_state), action]) / C[tuple(curr_state), action]
 
-            # Set priority for current state
-            priority = abs(reward + discount_factor * \
-                max(Q.get_action_values(state=tuple(next_state), actions=[0, 1, 2, 3]).values()) - Q[tuple(curr_state), action])
+            # update Q tables
+            # naive implementation - super inefficient and slow
+            # updates every entry of the Q table after every action
+            # (a literal implementation of fig 12.6 from https://artint.info/2e/html/ArtInt2e.Ch12.S8.html)
+            for (x1, y1) in C.get_all_states():
+                for act in range(4):
+                    if C[(x1, y1), act] == 0:
+                        continue
 
-            if priority > 0:
-                PQueue.insert(curr_state, action, priority)
+                    Q[(x1, y1), act] = R[(x1, y1), act]
 
-            while not PQueue.is_empty():
-                (x1, y1), act, _ = PQueue.pop()
-
-                Q[(x1, y1), act] = R[(x1, y1), act]
-
-                # Loop for all (state, action) pairs predicted to lead to S:
-                for (x2, y2) in T.get_states_accessible_from((x1, y1)):
-
-                    Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
+                    for (x2, y2) in T.get_states_accessible_from((x1, y1)):
+                        Q[(x1, y1), act] += discount_factor * (T[(x1, y1), act, (x2, y2)] / C[(x1, y1), act]) * \
                                 max(Q.get_action_values(state=(x2, y2), actions=[0, 1, 2, 3]).values())
-                    q_updates_count += 1
+                        q_updates_count += 1
 
-                for (xbar, ybar), act_from_sbar_to_s in T.get_state_actions_with_access_to((x1, y1)):
-                    predicted_reward = R[(xbar, ybar), act_from_sbar_to_s]
-
-                    # Set priority for (sbar, act) pair
-                    priority = abs(predicted_reward + discount_factor * \
-                        max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - Q[(xbar, ybar), act_from_sbar_to_s])
-
-                    if priority > 0:
-                        PQueue.insert((xbar, ybar), act_from_sbar_to_s, priority)
-                    
             curr_state = next_state
 
             if terminated or t >= MAX_TRY:
@@ -97,6 +82,8 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
         print(
             f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {q_updates_count}"
         )
+
+
 
     plt.pause(10)
     env.close()
