@@ -1,0 +1,1 @@
+from minigrid_envs.envs.grid_world import GridWorld
