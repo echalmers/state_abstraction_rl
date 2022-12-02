@@ -1,5 +1,5 @@
 import gym
-import gym_env
+import pygame_envs
 import numpy as np
 import random
 import tables
@@ -105,7 +105,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 """
 MAIN DRIVER
 """
-env = gym.make("gym_env/GridWorld-v0", render_mode="human")
+env = gym.make("GridWorld-v0", render_mode="human")
 env.action_space.seed(42)
 
 # Set of states
