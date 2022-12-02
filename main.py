@@ -22,7 +22,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
     R = tables.StateActionTable(default_value=0)
     C = tables.StateActionTable(default_value=0)
     T = tables.TTable()
-    PQueue = pqueue.StateActionPQueue()
+    PQueue = pqueue.UpdatablePriorityQueue()
     q_updates_count = 0
 
     heatmap = np.full((Ss[1], Ss[0]), fill_value=0, dtype=int)
@@ -55,10 +55,10 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
                 max(Q.get_action_values(state=tuple(next_state), actions=[0, 1, 2, 3]).values()) - Q[tuple(curr_state), action])
 
             if priority > 0:
-                PQueue.insert(curr_state, action, priority)
+                PQueue.insert((tuple(curr_state), action), priority)
 
             while not PQueue.is_empty():
-                (x1, y1), act, _ = PQueue.pop()
+                (x1, y1), act = PQueue.pop()
 
                 Q[(x1, y1), act] = R[(x1, y1), act]
 
@@ -77,7 +77,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
                         max(Q.get_action_values(state=(x1, y1), actions=[0, 1, 2, 3]).values()) - Q[(xbar, ybar), act_from_sbar_to_s])
 
                     if priority > 0:
-                        PQueue.insert((xbar, ybar), act_from_sbar_to_s, priority)
+                        PQueue.insert(((xbar, ybar), act_from_sbar_to_s), priority)
                     
             curr_state = next_state
 
