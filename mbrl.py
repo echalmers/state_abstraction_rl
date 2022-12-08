@@ -4,7 +4,35 @@ import numpy as np
 import random
 from matplotlib import pyplot as plt
 
+"""
+MBRL: 
 
+A model-based reinforcement learner that accepts a variety of input parameters 
+and customization. This learner uses prioritized sweeping to efficiency update
+Q values after an action is done.
+
+CUSTOMIZABLE PARAMETERS:
+- states
+- action_space
+- actions
+- epsilon
+- discount_factor
+- theta_threshold
+- max_pqueue_loops (NOT IMPLEMENTED YET)
+- q_default
+- r_default
+- c_default
+- display_graphs
+
+PUBLIC METHODS:
+- reset_total_episode_reward()
+- choose_action(state, sampled_action)
+- update(state, action, s_prime, reward)
+
+"PRIVATE" METHODS
+- __update_graphs()
+- __empty_priority_queue()
+"""
 class MBRL:
     def __init__(
         self,
@@ -20,6 +48,7 @@ class MBRL:
         c_default=0,
         display_graphs=True
     ):
+        """ Creates a model based reinforcement learner with the parameters specified."""
         self.states = states
         self.action_space = action_space
         self.actions = actions
@@ -46,10 +75,15 @@ class MBRL:
 
 
     def reset_total_episode_reward(self):
+        """ Resets the total episode reward to 0 """
         self.total_episode_reward = 0
 
 
     def choose_action(self, s, sampled_action):
+        """ 
+        Chooses an action from a specific state. 
+        The action can be the sampled_action or the best action provided from the Q table.
+        """
         if random.uniform(0, 1) < self.epsilon:
             return sampled_action
         else:
@@ -57,6 +91,10 @@ class MBRL:
 
 
     def update(self, s, a, s_prime, r):
+        """
+        Updates the Q, T, C, and R tables appropriately by conducting prioritized sweeping
+        in order to only update the important states first.
+        """
         self.total_episode_reward += r
 
         # update T, C, and R tables
