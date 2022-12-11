@@ -35,7 +35,7 @@ mbrl = mbrl.MBRL(
     epsilon=epsilon,
     discount_factor=discount_factor,
     theta_threshold=theta_threshold,
-    display_graphs=False
+    display_graphs=True
 )
 
 for episode in range(MAX_EPISODES):
