@@ -13,6 +13,7 @@ class UpdatablePriorityQueue(dict):
     def is_empty(self):
         return len(self) == 0
 
+
 if __name__ == '__main__':
     PQueue = UpdatablePriorityQueue()
     PQueue.insert(((1, 1), 2), 5)

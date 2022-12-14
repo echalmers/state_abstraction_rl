@@ -1,8 +1,7 @@
 import tables
 import pqueue
-import numpy as np
 import random
-from matplotlib import pyplot as plt
+import sys
 
 """
 MBRL: 
@@ -34,32 +33,39 @@ PUBLIC METHODS:
 - __empty_priority_queue()
 """
 class MBRL:
+    """
+    A tabular model-based reinforcement learner that uses prioritized sweeping to efficiency update
+    Q values after each action.
+    """
     def __init__(
         self,
-        states,
-        action_space,
         actions,
-        epsilon,
-        discount_factor,
-        theta_threshold,
-        max_pqueue_loops=0,
+        epsilon=0.1,
+        discount_factor=0.9,
+        theta_threshold=0,
+        max_value_iterations=sys.maxsize,
         q_default=100,
         r_default=0,
-        c_default=0,
-        display_graphs=True
+        c_default=0
     ):
-        """ Creates a model based reinforcement learner with the parameters specified."""
-        self.states = states
-        self.action_space = action_space
+        """
+        Creates a model based reinforcement learner with the parameters specified
+        :param actions: sequence of actions available
+        :param epsilon: exploration factor
+        :param discount_factor: discount factor
+        :param theta_threshold: temporal differences greater than this will be added to the priority queue for updating
+        :param max_value_iterations: max value calculations per step
+        :param q_default: default q value
+        :param r_default: default r value
+        :param c_default: starting count for transition counts
+        """
         self.actions = actions
         self.epsilon = epsilon
         self.discount_factor = discount_factor
         self.theta_threshold = theta_threshold
+        self.max_value_iterations = max_value_iterations
         self.q_default = q_default
-        self.total_episode_reward = 0
         self.q_table_updates = 0
-        self.display_graphs = display_graphs
-        self.plt = plt
 
         # Create and initialize StateActionTables, TTable, and PQueue.
         self.Q = tables.StateActionTable(default_value=self.q_default)
@@ -68,35 +74,20 @@ class MBRL:
         self.T = tables.TTable()
         self.PQueue = pqueue.UpdatablePriorityQueue()
 
-        if display_graphs:
-            self.q_fig, self.q_ax = self.plt.subplots(1, 2)
-            self.plt.ion()
-            self.heatmap = np.full((states[1], states[0]), fill_value=0, dtype=int)
-
-
-    def reset_total_episode_reward(self):
-        """ Resets the total episode reward to 0 """
-        self.total_episode_reward = 0
-
-
-    def choose_action(self, s, sampled_action):
+    def choose_action(self, s):
         """ 
-        Chooses an action from a specific state. 
-        The action can be the sampled_action or the best action provided from the Q table.
+        Chooses an action from a specific state uses e-greedy exploration.
         """
         if random.uniform(0, 1) < self.epsilon:
-            return sampled_action
+            return random.choice(self.actions)
         else:
             return self.Q.get_best_action(state=tuple(s), actions=self.actions)
-
 
     def update(self, s, a, s_prime, r):
         """
         Updates the Q, T, C, and R tables appropriately by conducting prioritized sweeping
         in order to only update the important states first.
         """
-        self.total_episode_reward += r
-
         # update T, C, and R tables
         self.T[tuple(s), a, tuple(s_prime)] += 1
         self.C[tuple(s), a] += 1
@@ -108,15 +99,11 @@ class MBRL:
         if priority > self.theta_threshold:
             self.PQueue.insert((tuple(s), a), priority)
 
-        self.__empty_priority_queue()
+        self.__process_priority_queue()
 
-        if self.display_graphs:
-            self.heatmap[s_prime[1], s_prime[0]] += 1
-            self.__update_graphs()
+    def __process_priority_queue(self):
+        for _ in range(min(len(self.PQueue), self.max_value_iterations)):
 
-
-    def __empty_priority_queue(self):
-        while not self.PQueue.is_empty():
             (x1, y1), act = self.PQueue.pop()
 
             self.Q[(x1, y1), act] = self.R[(x1, y1), act]
@@ -137,14 +124,3 @@ class MBRL:
 
                 if priority > self.theta_threshold:
                     self.PQueue.insert(((xbar, ybar), act_from_sbar_to_s), priority)
-
-
-    def __update_graphs(self):
-        self.q_ax[0].cla()
-        self.q_ax[1].cla()
-        value_map = (self.Q.convert_to_np_arr(self.states + (self.action_space,), self.q_default)).max(axis=2).transpose()
-        self.q_ax[0].set_title('perceived state values (max Q values)')
-        self.q_ax[1].set_title('agent heat map')
-        self.q_ax[0].imshow(value_map)
-        self.q_ax[1].imshow(self.heatmap, cmap='hot')
-        self.plt.pause(0.00001)

@@ -2,51 +2,48 @@ import gym
 import mbrl
 import gym_env
 import numpy as np
+import time
+
 
 MAX_EPISODES = 25
 MAX_TRY = 5000
-
-env = gym.make("gym_env/GridWorld-v0", render_mode="human")
-env.action_space.seed(42)
-
-# Set of states
-states = tuple(
-    (env.observation_space.high + np.ones(env.observation_space.shape)).astype(int)
-)
-
-# Set of actions
-action_space = env.action_space.n
-actions = [i for i in range(action_space)]
-
 discount_factor = 0.9
 
 # for priorities
-theta_threshold = 0
+theta_threshold = 0.01
 
 # Value to determine whether or not the agent explores more or not. 
 # i.e., a higher epsilon == more exploring
 epsilon = 0.1
 
+# create environment
+env = gym.make("gym_env/GridWorld-v0", render_mode='human', size=(48, 17))
+
 # Initialize the model-based reinforcement learner
 mbrl = mbrl.MBRL(
-    states=states,
-    action_space=action_space,
-    actions=actions,
+    actions=list(range(env.action_space.n)),
     epsilon=epsilon,
     discount_factor=discount_factor,
     theta_threshold=theta_threshold,
-    display_graphs=True
+    max_value_iterations=100
 )
 
+start_time = time.time()
 for episode in range(MAX_EPISODES):
     s, _ = env.reset()
+    total_episode_reward = 0
 
     for t in range(MAX_TRY):
         # get action
-        a = mbrl.choose_action(s, env.action_space.sample())
+        a = mbrl.choose_action(s)
 
         # execute action
         s_prime, reward, terminated, truncated, info = env.step(a)
+        total_episode_reward += reward
+
+        # plot
+        if t % 10 == 0:
+            env.show_plots(mbrl.Q)
 
         # update StateActionTables and graphs
         mbrl.update(s, a, s_prime, reward)
@@ -58,9 +55,9 @@ for episode in range(MAX_EPISODES):
             break
     
     print(
-        f"Episode #{episode} complete with a total reward of {round(mbrl.total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {mbrl.q_table_updates}"
+        f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {mbrl.q_table_updates}"
     )
-    mbrl.reset_total_episode_reward()
 
-mbrl.plt.pause(10)
+print('total time:', time.time() - start_time)
+time.sleep(10)
 env.close()
