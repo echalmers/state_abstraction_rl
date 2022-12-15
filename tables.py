@@ -40,19 +40,6 @@ class StateActionTable:
         action_values = self.get_action_values(state=state, actions=actions)
         return max(action_values, key=action_values.get)
 
-    def convert_to_np_arr(self, size, fill_value):
-        """
-        converts a StateActionTable to numpy array
-        :param size: size of the numpy array
-        :param fill_value: value to initialize array with
-        :return: the equivalent numpy array
-        """
-        arr = np.full(size, fill_value=fill_value)
-        for (x, y) in list(self.table.keys()):
-            for act, act_value in enumerate(list(self.get_action_values((x, y), [0, 1, 2, 3]).values())):
-                arr[x, y, act] = act_value
-        return arr
-
     def get_all_states(self):
         return self.table.keys()
 
