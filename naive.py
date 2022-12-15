@@ -1,18 +1,11 @@
 import gym
-import gym_env
+import pygame_envs
 import numpy as np
 import random
 import tables
-from matplotlib import pyplot as plt
-
 
 MAX_EPISODES = 25
 MAX_TRY = 5000
-
-# figure window for perceived values
-q_fig, q_ax = plt.subplots(1, 2)
-plt.ion()
-
 
 def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 
@@ -43,6 +36,10 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
             heatmap[next_state[1], next_state[0]] += 1
             total_episode_reward += reward
 
+            # plot
+            if t % 10 == 0:
+                env.show_plots(Q)
+
             # update T, C, and R tables
             T[tuple(curr_state), action, tuple(next_state)] += 1
             C[tuple(curr_state), action] += 1
@@ -69,16 +66,6 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
             if terminated or t >= MAX_TRY:
                 break
 
-            # display perceived values
-            q_ax[0].cla()
-            q_ax[1].cla()
-            value_map = (Q.convert_to_np_arr(Ss + (As,), 100)).max(axis=2).transpose()
-            q_ax[0].set_title('perceived state values (max Q values)')
-            q_ax[1].set_title('agent heat map')
-            q_ax[0].imshow(value_map)
-            q_ax[1].imshow(heatmap, cmap='hot')
-            plt.pause(0.00001)
-
         print(
             f"Episode #{episode} complete with a total reward of {round(total_episode_reward, 2)}. Target found? {terminated}. Q table accesses is at {q_updates_count}"
         )
@@ -92,7 +79,7 @@ def model_based_reinforcement_learner(env, Ss, As, discount_factor, epsilon):
 """
 MAIN DRIVER
 """
-env = gym.make("gym_env/GridWorld-v0", render_mode="human")
+env = gym.make("GridWorld-v0", render_mode="human")
 env.action_space.seed(42)
 
 # Set of states
