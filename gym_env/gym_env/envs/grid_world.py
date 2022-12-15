@@ -3,24 +3,23 @@ from gym import spaces
 import pygame
 import numpy as np
 import math
+import matplotlib.pyplot as plt
+
+from tables import StateActionTable
 
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
-RIGHT = 0
-UP = 1
-LEFT = 2
-DOWN = 3
 
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 100000}
 
-    def __init__(self, render_mode=None):
-        self.size_x = 48
-        self.size_y = 17
-        self.block_size = 20
+    def __init__(self, render_mode=None, size=(48, 17), block_size=20):
+        self.size_x = size[0]
+        self.size_y = size[1]
+        self.block_size = block_size
         self.window_width = self.size_x * self.block_size
         self.window_height = self.size_y * self.block_size
 
@@ -35,10 +34,10 @@ class GridWorldEnv(gym.Env):
         Note the above predefined "constants" above for 0, 1, 2, 3
         """
         self._action_to_direction = {
-            RIGHT:  np.array([1, 0]),
-            UP:     np.array([0, 1]),
-            LEFT:   np.array([-1, 0]),
-            DOWN:   np.array([0, -1]),
+            0:  np.array([1, 0]),  # right
+            1:  np.array([0, 1]),  # up
+            2:  np.array([-1, 0]),  # left
+            3:  np.array([0, -1]),  # down
         }
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
@@ -53,6 +52,9 @@ class GridWorldEnv(gym.Env):
         """
         self.window = None
         self.clock = None
+
+        self.q_ax = None
+        self.heatmap = np.full((self.size_y, self.size_x), fill_value=0, dtype=int)
 
     def _get_obs(self):
         return self._agent_location
@@ -104,6 +106,8 @@ class GridWorldEnv(gym.Env):
 
         if self.render_mode == "human":
             self._render_frame()
+
+        self.heatmap[observation[1], observation[0]] += 1
             
         return observation, reward, terminated, False, info
 
@@ -166,6 +170,24 @@ class GridWorldEnv(gym.Env):
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
             )
+
+    def show_plots(self, Q_table: StateActionTable):
+        if self.q_ax is None:
+            _, self.q_ax = plt.subplots(1, 2)
+            plt.ion()
+
+        self.q_ax[0].cla()
+        self.q_ax[0].set_title('perceived state values (max Q values)')
+        value_map = np.zeros((self.size_y, self.size_x))
+        for coords in np.ndindex(value_map.shape):
+            value_map[coords[0], coords[1]] = max(Q_table.get_action_values((coords[1], coords[0]), list(self._action_to_direction)).values())
+        self.q_ax[0].imshow(value_map, cmap='copper')
+
+        self.q_ax[1].cla()
+        self.q_ax[1].set_title('agent heat map')
+        self.q_ax[1].imshow(self.heatmap, cmap='hot')
+
+        plt.pause(0.00001)
 
     def close(self):
         if self.window is not None:
