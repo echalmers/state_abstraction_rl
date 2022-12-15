@@ -8,20 +8,17 @@ MBRL:
 
 A model-based reinforcement learner that accepts a variety of input parameters 
 and customization. This learner uses prioritized sweeping to efficiency update
-Q values after an action is done.
+Q values after an action is executed.
 
 CUSTOMIZABLE PARAMETERS:
-- states
-- action_space
 - actions
 - epsilon
 - discount_factor
 - theta_threshold
-- max_pqueue_loops (NOT IMPLEMENTED YET)
+- max_value_iterations
 - q_default
 - r_default
 - c_default
-- display_graphs
 
 PUBLIC METHODS:
 - reset_total_episode_reward()
@@ -29,8 +26,7 @@ PUBLIC METHODS:
 - update(state, action, s_prime, reward)
 
 "PRIVATE" METHODS
-- __update_graphs()
-- __empty_priority_queue()
+- __process_priority_queue()
 """
 class MBRL:
     """
