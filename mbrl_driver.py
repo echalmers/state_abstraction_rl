@@ -1,6 +1,6 @@
 import gym
 import mbrl
-import gym_env
+import pygame_envs
 import numpy as np
 import time
 
@@ -17,7 +17,7 @@ theta_threshold = 0.01
 epsilon = 0.1
 
 # create environment
-env = gym.make("gym_env/GridWorld-v0", render_mode='human', size=(48, 17))
+env = gym.make("GridWorld-v0", render_mode='human', size=(48, 17))
 
 # Initialize the model-based reinforcement learner
 mbrl = mbrl.MBRL(
