@@ -38,13 +38,14 @@ def h(node, goal):
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
 def get_min_h_cell(openSet, goal):
-    min_cell = sys.maxsize
-    min_h = sys.maxsize
+    """
+    Returns the cell in the set that has the minimum heuristic score.
+    """
+    min_cell, min_h = sys.maxsize, sys.maxsize
     for x in openSet:
         x_h = h(x, goal)
         if x_h < min_h:
-            min_h = x_h
-            min_cell = x
+            min_cell, min_h = x, x_h
     return min_cell
 
 def a_star(start, goal):
