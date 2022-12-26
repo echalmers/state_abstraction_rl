@@ -1,10 +1,12 @@
 import gym
 import mbrl
 import pygame_envs
+import imageio.v2 as iio
 import numpy as np
 import time
 import astar
 
+IMAGE_FOLDER = 'images/'
 MAX_EPISODES = 25
 MAX_TRY = 5000
 discount_factor = 0.9
@@ -16,8 +18,12 @@ theta_threshold = 0.01
 # i.e., a higher epsilon == more exploring
 epsilon = 0.1
 
-# create environment
-env = gym.make("GridWorld-v0", render_mode='human', size=(48, 17))
+# Choose bitmap for environment
+im = iio.imread(IMAGE_FOLDER + input("Enter the bitmap filename: "))
+height, width  = im.shape
+
+# Create environment
+env = gym.make("GridWorld-v0", img=im, render_mode='human', size=(width, height))
 
 # Initialize the model-based reinforcement learner
 mbrl = mbrl.MBRL(

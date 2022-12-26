@@ -17,13 +17,13 @@ BLACK = (0, 0, 0)
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 100000}
 
-    def __init__(self, render_mode=None, size=(48, 17), block_size=20):
+    def __init__(self, img, target_location=(45, 11), render_mode=None, size=(48, 17), block_size=20):
         self.size_x = size[0]
         self.size_y = size[1]
         self.block_size = block_size
         self.window_width = self.size_x * self.block_size
         self.window_height = self.size_y * self.block_size
-
+        self.img = img
         self.observation_space = spaces.Box(np.array([0, 0]), np.array([self.size_x, self.size_y]), dtype=int)
 
         # 4 actions, corresponding to "right", "up", "left", "down", "right"
@@ -126,6 +126,7 @@ class GridWorldEnv(gym.Env):
 
         canvas = pygame.Surface((self.window_width, self.window_height))
         canvas.fill((255, 255, 255))
+
         pix_square_size = (
             self.block_size
         )  # The size of a single grid square in pixels
@@ -148,14 +149,17 @@ class GridWorldEnv(gym.Env):
             pix_square_size / 3,
         )
 
-        # Draw gridlines
-        for x in range (0, self.window_width, self.block_size):
+        for x in range(0, self.window_width, self.block_size):
             for y in range(0, self.window_height, self.block_size):
-                if y == 0 or x == 0 or y == (self.window_height - self.block_size) or x == (self.window_width - self.block_size):
-                    rect = pygame.Rect(x, y, self.block_size, self.block_size)
-                    pygame.draw.rect(canvas, BLUE, rect)
-                
                 rect = pygame.Rect(x, y, self.block_size, self.block_size)
+
+                _x = int(x / self.block_size)
+                _y = int(y / self.block_size)
+
+                # Draw walls
+                if self.img[_y][_x] == 0:
+                    pygame.draw.rect(canvas, BLUE, rect)
+
                 pygame.draw.rect(canvas, BLACK, rect, 1)
 
         # Draw best path if its passed in
