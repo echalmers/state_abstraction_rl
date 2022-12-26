@@ -89,7 +89,7 @@ class GridWorldEnv(gym.Env):
         
         # We use `np.clip` to make sure we don't leave the grid
         self._agent_location = np.clip(
-            self._agent_location + direction, [0, 0], [self.size_x - 1, self.size_y - 1]
+            self._agent_location + direction, [1, 1], [self.size_x - 2, self.size_y - 2]
         )
 
         # An episode is done iff the agent has reached the target
