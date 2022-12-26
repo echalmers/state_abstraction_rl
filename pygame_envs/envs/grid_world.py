@@ -17,7 +17,7 @@ BLACK = (0, 0, 0)
 class GridWorldEnv(gym.Env):
     metadata = {"render_modes": ["human", "rgb_array"], "render_fps": 100000}
 
-    def __init__(self, img, target_location=(45, 11), render_mode=None, size=(48, 17), block_size=20):
+    def __init__(self, img, render_mode=None, size=(48, 17), block_size=20):
         self.size_x = size[0]
         self.size_y = size[1]
         self.block_size = block_size
