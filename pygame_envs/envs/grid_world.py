@@ -89,7 +89,7 @@ class GridWorldEnv(gym.Env):
         
         # We use `np.clip` to make sure we don't leave the grid
         self._agent_location = np.clip(
-            self._agent_location + direction, [1, 1], [self.size_x - 2, self.size_y - 2]
+            self._agent_location + direction, [0, 0], [self.size_x - 1, self.size_y - 1]
         )
 
         # An episode is done iff the agent has reached the target
@@ -98,8 +98,9 @@ class GridWorldEnv(gym.Env):
         observation = self._get_obs()                     
         info = self._get_info()
 
-        if (old_location == self._agent_location).all(): # if agent hits a wall
+        if self.img[self._agent_location[1]][self._agent_location[0]] == 0: # if agent hits a wall
             reward = -0.1
+            self._agent_location = old_location
         elif terminated:
             reward = 10
         else:
