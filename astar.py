@@ -5,6 +5,7 @@ from collections import defaultdict
 import sys 
 import pygame
 import time
+import pqueue
 
 # ---------------------------- A* SEARCH ALGORITHM ----------------------------
 # 
@@ -37,19 +38,14 @@ def h(node, goal):
     """
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
-def get_min_h_cell(openSet, goal):
-    """
-    Returns the cell in the set that has the minimum heuristic score.
-    """
-    return min(openSet, key=openSet.get) 
-
 def a_star(start, goal):
     """
     The A* search algorithm implementation
     :param start: the start cell
     :param goal: the goal cell
     """
-    openSet = { start: h(start, goal) }
+    openSet = pqueue.UpdatablePriorityQueue()
+    openSet.insert(start, h(start, goal))
     cameFrom = {}
 
     gScore = defaultdict(lambda: sys.maxsize)
@@ -59,12 +55,11 @@ def a_star(start, goal):
     fScore[start] = h(start, goal)
 
     while openSet:
-        current = get_min_h_cell(openSet, goal)
+        current = openSet.pop(operation=min)
 
         if current == goal:
             return reconstruct_path(cameFrom, current)
 
-        openSet.pop(current)
         for neighbor in T.get_states_accessible_from(current):
             tentative_gScore = gScore[current] + d(current, neighbor)
             
@@ -73,7 +68,7 @@ def a_star(start, goal):
                 gScore[neighbor] = tentative_gScore
                 fScore[neighbor] = tentative_gScore + h(neighbor, goal)
                 if neighbor not in openSet:
-                    openSet[neighbor] = fScore[neighbor]
+                    openSet.insert(neighbor, fScore[neighbor])
     
     return False
 
