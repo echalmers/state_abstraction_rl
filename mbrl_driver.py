@@ -3,7 +3,7 @@ import mbrl
 import pygame_envs
 import numpy as np
 import time
-
+import astar
 
 MAX_EPISODES = 25
 MAX_TRY = 5000
@@ -29,8 +29,11 @@ mbrl = mbrl.MBRL(
 )
 
 start_time = time.time()
+prev_path = None
+
 for episode in range(MAX_EPISODES):
     s, _ = env.reset()
+    start = tuple(s)
     total_episode_reward = 0
 
     for t in range(MAX_TRY):
@@ -52,6 +55,9 @@ for episode in range(MAX_EPISODES):
         s = s_prime
 
         if terminated or t >= MAX_TRY:
+            if terminated:
+                env.draw_best_path(astar.a_star(start, tuple(s), mbrl.T), prev_path)
+                prev_path = astar.a_star(start, tuple(s), mbrl.T)
             break
     
     print(

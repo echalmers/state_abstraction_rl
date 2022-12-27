@@ -38,7 +38,7 @@ def h(node, goal):
     """
     return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
 
-def a_star(start, goal):
+def a_star(start, goal, T):
     """
     The A* search algorithm implementation
     :param start: the start cell
@@ -156,5 +156,5 @@ if __name__ == '__main__':
     goal = tuple(int(x) for x in input("Enter the goal cell: ").split(","))
 
     # ------------------------ CALCULATE PATH AND DRAW ------------------------
-    path = a_star(start, goal)
+    path = a_star(start, goal, T)
     pygame_init(path)

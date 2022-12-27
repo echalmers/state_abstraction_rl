@@ -3,6 +3,7 @@ from gym import spaces
 import pygame
 import numpy as np
 import math
+import time
 import matplotlib.pyplot as plt
 
 from tables import StateActionTable
@@ -115,7 +116,7 @@ class GridWorldEnv(gym.Env):
         if self.render_mode == "rgb_array":
             return self._render_frame()
 
-    def _render_frame(self):
+    def _render_frame(self, path=None):
         if self.window is None and self.render_mode == "human":
             pygame.init()
             pygame.display.init()
@@ -157,6 +158,13 @@ class GridWorldEnv(gym.Env):
                 rect = pygame.Rect(x, y, self.block_size, self.block_size)
                 pygame.draw.rect(canvas, BLACK, rect, 1)
 
+        # Draw best path if its passed in
+        if path:
+            for x, y in path:
+                rect = pygame.Rect(x * self.block_size, y * self.block_size, self.block_size, self.block_size)
+                pygame.draw.rect(canvas, (255, 0, 0), rect)
+                pygame.draw.rect(canvas, BLACK, rect, 1)
+
         if self.render_mode == "human":
             # The following line copies our drawings from `canvas` to the visible window
             self.window.blit(canvas, canvas.get_rect())
@@ -170,6 +178,11 @@ class GridWorldEnv(gym.Env):
             return np.transpose(
                 np.array(pygame.surfarray.pixels3d(canvas)), axes=(1, 0, 2)
             )
+
+    def draw_best_path(self, curr_path, prev_path):
+        if curr_path != prev_path:
+            self._render_frame(curr_path)
+            time.sleep(1)
 
     def show_plots(self, Q_table: StateActionTable):
         if self.q_ax is None:
