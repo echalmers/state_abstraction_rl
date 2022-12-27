@@ -4,9 +4,9 @@ class UpdatablePriorityQueue(dict):
         """insert item with priority. If item already exists, update it's priority"""
         self[item] = priority
 
-    def pop(self, item=None):
+    def pop(self, operation=max, item=None):
         """pop item from queue. If item not specified, pop highest-priority item"""
-        key_to_pop = item or max(self, key=self.get)
+        key_to_pop = item or operation(self, key=self.get)
         super().pop(key_to_pop)
         return key_to_pop
 
