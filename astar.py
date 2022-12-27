@@ -41,12 +41,7 @@ def get_min_h_cell(openSet, goal):
     """
     Returns the cell in the set that has the minimum heuristic score.
     """
-    min_cell, min_h = sys.maxsize, sys.maxsize
-    for x in openSet:
-        x_h = h(x, goal)
-        if x_h < min_h:
-            min_cell, min_h = x, x_h
-    return min_cell
+    return min(openSet, key=openSet.get) 
 
 def a_star(start, goal):
     """
@@ -54,7 +49,7 @@ def a_star(start, goal):
     :param start: the start cell
     :param goal: the goal cell
     """
-    openSet = {start}
+    openSet = { start: h(start, goal) }
     cameFrom = {}
 
     gScore = defaultdict(lambda: sys.maxsize)
@@ -69,16 +64,16 @@ def a_star(start, goal):
         if current == goal:
             return reconstruct_path(cameFrom, current)
 
-        openSet.remove(current)
+        openSet.pop(current)
         for neighbor in T.get_states_accessible_from(current):
             tentative_gScore = gScore[current] + d(current, neighbor)
             
             if tentative_gScore < gScore[neighbor]:
                 cameFrom[neighbor] = current
                 gScore[neighbor] = tentative_gScore
-                fScore = tentative_gScore + h(neighbor, goal)
+                fScore[neighbor] = tentative_gScore + h(neighbor, goal)
                 if neighbor not in openSet:
-                    openSet.add(neighbor)
+                    openSet[neighbor] = fScore[neighbor]
     
     return False
 
