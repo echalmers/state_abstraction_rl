@@ -9,7 +9,7 @@ import astar
 IMAGE_FOLDER = 'images/'
 MAX_EPISODES = 25
 MAX_TRY = 5000
-discount_factor = 0.9
+discount_factor = 0.99
 
 # for priorities
 theta_threshold = 0.01
