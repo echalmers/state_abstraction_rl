@@ -85,12 +85,11 @@ class GridWorldEnv(gym.Env):
     def step(self, action):
         # Map the action (element of {0,1,2,3}) to the direction we walk in
         direction = self._action_to_direction[action]
-        old_location = self._agent_location
-        
-        # We use `np.clip` to make sure we don't leave the grid
-        self._agent_location = np.clip(
-            self._agent_location + direction, [1, 1], [self.size_x - 2, self.size_y - 2]
-        )
+        next_cell = self._agent_location + direction
+
+        # Only move agent if next cell is not a wall
+        if self.img[next_cell[1]][next_cell[0]] != 0:
+            self._agent_location = self._agent_location + direction
 
         # An episode is done iff the agent has reached the target
         terminated = np.array_equal(self._agent_location, self._target_location)
@@ -98,9 +97,8 @@ class GridWorldEnv(gym.Env):
         observation = self._get_obs()                     
         info = self._get_info()
 
-        if self.img[self._agent_location[1]][self._agent_location[0]] == 0: # if agent hits a wall
+        if self.img[next_cell[1]][next_cell[0]] == 0: # if agent hits a wall
             reward = -0.1
-            self._agent_location = old_location
         elif terminated:
             reward = 10
         else:
@@ -110,7 +108,7 @@ class GridWorldEnv(gym.Env):
             self._render_frame()
 
         self.heatmap[observation[1], observation[0]] += 1
-            
+        
         return observation, reward, terminated, False, info
 
     def render(self):
