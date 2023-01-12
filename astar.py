@@ -30,29 +30,32 @@ def d(current, neighbor):
     """
     return 1
 
-def h(node, goal):
+def h(node, h_params):
     """
     The heuristic function that calculates the taxicab geometry from the current node to the goal.
     :param node: the current cell in the form of (x, y)
-    :param goal: the goal cell in the form of (x, y)
+    :param h_params: a dictionary of other parameters to be used in heuristic calculation
     """
-    return abs(node[0] - goal[0]) + abs(node[1] - goal[1])
+    return abs(node[0] - h_params.get("goal")[0]) + abs(node[1] - h_params.get("goal")[1])
 
-def a_star(start, goal, T):
+def a_star(start, goal, T, h, h_params={}):
     """
     The A* search algorithm implementation
     :param start: the start cell
     :param goal: the goal cell
     """
+    if h_params == {}:
+        h_params = {"goal": goal}
+
     openSet = pqueue.UpdatablePriorityQueue()
-    openSet.insert(start, h(start, goal))
+    openSet.insert(start, h(start, h_params))
     cameFrom = {}
 
     gScore = defaultdict(lambda: sys.maxsize)
     gScore[start] = 0
 
     fScore = defaultdict(lambda: sys.maxsize)
-    fScore[start] = h(start, goal)
+    fScore[start] = h(start, h_params)
 
     while openSet:
         current = openSet.pop(operation=min)
@@ -66,7 +69,7 @@ def a_star(start, goal, T):
             if tentative_gScore < gScore[neighbor]:
                 cameFrom[neighbor] = current
                 gScore[neighbor] = tentative_gScore
-                fScore[neighbor] = tentative_gScore + h(neighbor, goal)
+                fScore[neighbor] = tentative_gScore + h(neighbor, h_params)
                 if neighbor not in openSet:
                     openSet.insert(neighbor, fScore[neighbor])
     
@@ -156,5 +159,5 @@ if __name__ == '__main__':
     goal = tuple(int(x) for x in input("Enter the goal cell: ").split(","))
 
     # ------------------------ CALCULATE PATH AND DRAW ------------------------
-    path = a_star(start, goal, T)
+    path = a_star(start, goal, T, h)
     pygame_init(path)
