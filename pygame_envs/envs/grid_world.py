@@ -183,12 +183,13 @@ class GridWorldEnv(gym.Env):
             )
 
     def h(self, node, h_params):
-        return h_params.get("Q").get_best_action(state=node, actions=h_params.get("actions"))
+        Q = h_params.get('Q')
+        return Q[node, Q.get_best_action(state=node, actions=h_params.get('actions'))]
 
     def draw_best_path(self, curr_path, prev_path):
         if curr_path != prev_path:
             self._render_frame(curr_path)
-            time.sleep(1)
+            time.sleep(5)
 
     def show_plots(self, Q_table: StateActionTable):
         if self.q_ax is None:
