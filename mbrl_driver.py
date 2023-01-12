@@ -62,8 +62,8 @@ for episode in range(MAX_EPISODES):
 
         if terminated or t >= MAX_TRY:
             if terminated:
-                env.draw_best_path(astar.a_star(start, tuple(s), mbrl.T), prev_path)
-                prev_path = astar.a_star(start, tuple(s), mbrl.T)
+                env.draw_best_path(astar.a_star(start, tuple(s), mbrl.T, env.h, h_params={"Q": mbrl.Q, "actions": mbrl.actions}), prev_path)
+                prev_path = astar.a_star(start, tuple(s), mbrl.T, env.h, h_params={"Q": mbrl.Q, "actions": mbrl.actions})
             break
     
     print(
